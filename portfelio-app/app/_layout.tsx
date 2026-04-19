@@ -29,7 +29,6 @@ export default function RootLayout() {
           <Stack.Screen name="month-summary" options={{ gestureEnabled: false }} />
           <Stack.Screen name="what-if" />
           <Stack.Screen name="year-summary" options={{ gestureEnabled: false }} />
-          <Stack.Screen name="leaderboard" />
           <Stack.Screen name="asset/[id]" />
         </Stack>
         <PickerOverlay />

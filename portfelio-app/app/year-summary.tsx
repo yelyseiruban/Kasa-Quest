@@ -1,13 +1,9 @@
-import { useEffect, useRef } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
+import { View, Text, ScrollView, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Colors } from '../constants/colors'
 import { usePickerScroll } from '../contexts/PickerVisibility'
-import { useGameStore, selectNetWorth, type AssetId } from '../store/gameStore'
+import { useGameStore, selectNetWorth } from '../store/gameStore'
 import IQBar from '../components/IQBar'
-
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'https://portfelio-backend.fly.dev:3000'
 
 const INITIAL_WALLET = 1000
 const MONTHLY_INCOME = 400
@@ -30,15 +26,12 @@ const IQ_COLORS = {
 }
 
 export default function YearSummaryScreen() {
-  const router = useRouter()
   const { t } = useTranslation()
-  const posted = useRef(false)
 
   const nickname = useGameStore(s => s.nickname)
   const language = useGameStore(s => s.language)
   const financialIQ = useGameStore(s => s.financialIQ)
   const investments = useGameStore(s => s.investments)
-  const monthlyHistory = useGameStore(s => s.monthlyHistory)
   const netWorth = useGameStore(selectNetWorth)
 
   const totalReturn = ((netWorth - TOTAL_INCOME) / TOTAL_INCOME) * 100
@@ -56,25 +49,6 @@ export default function YearSummaryScreen() {
   }))
   const best = assetResults.sort((a, b) => b.pct - a.pct)[0]
   const worst = assetResults[assetResults.length - 1]
-
-  // Post score to leaderboard once
-  useEffect(() => {
-    if (posted.current || !nickname) return
-    posted.current = true
-
-    const totalDecisions = monthlyHistory.reduce((acc, m) => acc + m.actions.length, 0)
-
-    fetch(`${BACKEND_URL}/score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nickname,
-        financialIQ: iqTotal,
-        totalReturn: parseFloat(totalReturn.toFixed(2)),
-        decisions: totalDecisions,
-      }),
-    }).catch(() => {}) // silent fail for hackathon
-  }, [])
 
   const lang = language as 'pl' | 'en'
   const { onScroll } = usePickerScroll()
@@ -163,15 +137,6 @@ export default function YearSummaryScreen() {
 
         <View style={{ height: 24 }} />
       </ScrollView>
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.leaderboardBtn}
-          onPress={() => router.replace('/leaderboard')}
-        >
-          <Text style={styles.leaderboardBtnText}>{t('year_summary.see_leaderboard')} →</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   )
 }
@@ -243,18 +208,4 @@ const styles = StyleSheet.create({
   breakdownValue: { color: Colors.text, fontSize: 13, fontWeight: '600', marginRight: 8 },
   breakdownPct: { fontSize: 13, fontWeight: '700', minWidth: 52, textAlign: 'right' },
 
-  footer: {
-    padding: 16,
-    paddingBottom: 32,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  leaderboardBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-  },
-  leaderboardBtnText: { color: Colors.text, fontSize: 16, fontWeight: '800' },
 })
